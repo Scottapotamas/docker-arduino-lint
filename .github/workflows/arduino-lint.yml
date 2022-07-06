@@ -1,0 +1,36 @@
+name: arduino-lint
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 1 * * *'
+jobs:
+  get-version:
+    runs-on: ubuntu-latest
+    outputs:
+      modified: ${{steps.git-check.outputs.modified}}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN  }}
+      - name: Fetch GitHub release version for arduino-lint
+        run: |
+          curl -sL https://api.github.com/repos/arduino/arduino-lint/releases/latest | \
+          jq -r ".tag_name" > release-versions/arduino-lint-latest.txt
+      - name: Check for modified files
+        id: git-check
+        run: echo ::set-output name=modified::$([ -z "`git status --porcelain`" ] && echo "false" || echo "true")
+      - name: Commit latest release version
+        if: steps.git-check.outputs.modified == 'true'
+        run: |
+          git config --global user.name 'Scott Rapson'
+          git config --global user.email 'scottapotamas@gmail.com'
+          git commit -am "New release version - arduino-lint"
+          git push
+
+  build-dh:
+    needs: get-version
+    if: ${{ needs.get-version.outputs.modified == 'true' }}
+    uses: scottapotamas/docker-arduino-lint/.github/workflows/build-image-dh.yml@master
+    secrets:
+        DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+        DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
