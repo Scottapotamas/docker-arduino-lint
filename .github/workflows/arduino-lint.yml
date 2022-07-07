@@ -30,7 +30,7 @@ jobs:
   build-dh:
     needs: get-version
     if: ${{ needs.get-version.outputs.modified == 'true' }}
-    uses: scottapotamas/docker-arduino-lint/.github/workflows/build-image-dh.yml@master
+    uses: scottapotamas/docker-arduino-lint/.github/workflows/build-image-dh.yml@main
     secrets:
         DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         DOCKER_HUB_USER: ${{ secrets.DOCKER_HUB_USER }}
